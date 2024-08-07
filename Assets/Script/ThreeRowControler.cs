@@ -8,47 +8,82 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Controler 
+public class ThreeRowControler: Controller
 {
-    Button[,] button;
-    Image[] image;
-    public int[,] map;
-    public bool[,] mark;
+    private CellComponent[,] cellComponent; 
+    private int[,] map;
+    private bool[,] mark;
 
-    public int Size = 5;
-    public int Bolls = 7;
+    private int Size = 5;
+    private int Bolls = 7;
 
-    int FromX, FromY;
-    bool IsSelected;
+    private int FromX, FromY;
+    private bool IsSelected;
 
+    private ThreeRowView _view;
+    private ThreeRowModel _model; 
+    
+    public GameObject componentPrefab;
+    public GameObject panel;
+    public Sprite[] sprites;
 
-    public Controler()
+    public ThreeRowControler(ThreeRowView view, ThreeRowModel model)
     {
-        map = new int[Size, Size];
+        _model = model;
+        _view = view;
+
+        map = _model.Map;
+        Size = _model.BoardSize;
+
+        componentPrefab = _view.componentPrefab;
+        panel = _view.panel;
+        sprites = _view.sprites;
+
         mark = new bool[Size, Size];    
         IsSelected = false;
     }
 
-    public void InitButton()
+    public override void Init()
     {
-        button = new Button[Size, Size];
+        InitCellComponent();
+        SetClickOnButtons();
+        SetCurrentSprites();
+    }
 
-        for (int a = 0; a < button.Length; a++)
+    private void InitCellComponent()
+    {
+        cellComponent = new CellComponent[Size, Size];
+
+        for (int a = 0; a < cellComponent.Length; a++)
         {
-            button[a % Size, a / Size] = GameObject.Find($"Button ({a})").GetComponent<Button>();
+            var cell = GameObject.Instantiate(componentPrefab);
+            cell.transform.SetParent(panel.transform, false);
+            cellComponent[a % Size, a / Size] = cell.GetComponent<CellComponent>();
+            cellComponent[a % Size, a / Size].Index = a;
         }
     }
 
-    public void InitImage()
+    private void SetClickOnButtons()
     {
-        image = new Image[Bolls];
-        for (int a = 0; a < Bolls; a++)
+        for (int a = 0; a < cellComponent.Length; a++)
         {
-            image[a] = GameObject.Find($"Image ({a})").GetComponent<Image>();
+            var temp = a;
+            cellComponent[a % Size, a / Size].Button.onClick.AddListener(() =>
+            {
+                Click(temp);
+            });
         }
     }
-       
-    public void ClearMap()
+
+    private void SetCurrentSprites()
+    {
+        for (int a = 0; a < cellComponent.Length; a++)
+        { 
+            cellComponent[a % Size, a / Size].Image.sprite = sprites[map[a % Size, a / Size]]; 
+        }
+    }
+
+    private void ClearMap()
     {
         for (int a = 0; a < Size; a++)
         {
@@ -59,7 +94,7 @@ public class Controler
         }
     }
 
-    public void AddRandomBolls()
+    private void AddRandomBolls()
     {
         for (int a = 0; a < Size; a++)
         {
@@ -70,7 +105,7 @@ public class Controler
         }
     }
 
-    public void AddRandomBoll(int a, int b)
+    private void AddRandomBoll(int a, int b)
     {
         bool reroll = true;
 
@@ -89,20 +124,17 @@ public class Controler
         SetMap(a, b, map[a, b]);
     }
 
-    public void SetMap(int a, int b, int Image)
+    private void SetMap(int a, int b, int Image)
     {
         map[a, b] = Image;
-        button[a, b].GetComponent<Image>().sprite = image[Image].sprite;
+        cellComponent[a, b].Image.sprite = sprites[Image];
     }
 
-  
-    public void Click()
-    {
-        string name = EventSystem.current.currentSelectedGameObject.name;
-        int Number = Num(name);
-        int x = Number % Size;
-        int y = Number / Size;
-        Debug.Log($"{name} {x} {y}");
+
+    private void Click(int index)
+    { 
+        int x = index % Size;
+        int y = index / Size; 
 
         if (IsSelected)
         {
@@ -114,7 +146,7 @@ public class Controler
         }
     }
 
-    public void TakeBoll(int x, int y)
+    private void TakeBoll(int x, int y)
     {
         FromX = x;
         FromY = y;
@@ -122,20 +154,20 @@ public class Controler
 
     }
 
-    public void MoveBoll(int x, int y)
+    private void MoveBoll(int x, int y)
     {
         if (!IsSelected) return;
         if (PosibleMove(x, y)) 
         {        
-        int swap = map[x, y];
+            int swap = map[x, y];
 
-        SetMap(x, y, map[FromX, FromY]);
-        SetMap(FromX, FromY, swap);
-        DeleteLines();
+            SetMap(x, y, map[FromX, FromY]);
+            SetMap(FromX, FromY, swap);
+            DeleteLines();
 
-        FromX = 0;
-        FromY = 0;
-        IsSelected = false;
+            FromX = 0;
+            FromY = 0;
+            IsSelected = false;
         }
         else
         {
@@ -159,7 +191,7 @@ public class Controler
         }
     }
 
-    public bool DeleteLines() 
+    private bool DeleteLines() 
     {
         int Deleteline = 0;
         for(int x = 0; x < Size; x++) 
@@ -233,30 +265,14 @@ public class Controler
     private int GetMap(int x, int y)
     {
         if (x >= 0 && y >= 0 && x < Size && y < Size)
-        {
-            Debug.Log($"{x} {y}");
+        { 
             return map[x, y];
         }
         else
         {
             return 0;
         }
-    }
-
-
-
-
-   private int Num(string name)
-    {
-        Regex regex = new Regex("\\((\\d+)\\)");
-        Match match = regex.Match(name);
-        if (!match.Success)
-            throw new System.Exception("not");
-        Group group = match.Groups[1];
-        string number = group.Value;
-        return Convert.ToInt32(number);
-    }
-
+    } 
 }
 
 
