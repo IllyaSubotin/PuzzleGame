@@ -158,12 +158,28 @@ public class ThreeRowControler: Controller
     {
         if (!IsSelected) return;
         if (PosibleMove(x, y)) 
-        {        
-            int swap = map[x, y];
+        {     
+            int swap1 = map[x, y];
+            int swap2 = map[FromX, FromY];  
 
             SetMap(x, y, map[FromX, FromY]);
-            SetMap(FromX, FromY, swap);
-            DeleteLines();
+            SetMap(FromX, FromY, swap1);  
+
+            //Тут анімация отмени
+
+            if(DeleteLines())
+            {
+                if (SearchPosibleTurn()) 
+                {
+                    AddRandomBolls();
+                }
+            }
+            else 
+            {
+                SetMap(x, y, swap1);
+                SetMap(FromX, FromY, swap2);
+            }
+
 
             FromX = 0;
             FromY = 0;
@@ -174,6 +190,9 @@ public class ThreeRowControler: Controller
             TakeBoll(x, y);
         }
     }
+
+    
+
     private bool PosibleMove(int x, int y)
     {
 
@@ -193,12 +212,16 @@ public class ThreeRowControler: Controller
 
     private bool DeleteLines() 
     {
-        int Deleteline = 0;
+        bool Deleteline = false;
         for(int x = 0; x < Size; x++) 
         {
             for (int y = 0; y < Size; y++)
             {
-                Deleteline = DeleteAllLine(Deleteline, x, y);
+                if (DeleteLine(x, y, 1, 0) - DeleteLine(x, y, 0, 1) - DeleteLine(x, y, -1, 0) - DeleteLine(x, y, 0, -1) > 0)
+                {
+                    Deleteline = true;
+                }
+                
             }
         }
 
@@ -209,31 +232,31 @@ public class ThreeRowControler: Controller
                 if (mark[x, y]) 
                 {
                     SetMap(x, y, 0);
-                    AddRandomBoll(x, y);
+                    CreateNewBall(x, y);
                     mark[x, y] = false;
                 }
                 
             }
         }
-        if (Deleteline >= 0) 
-        {
-            return true;
-        }
-        else 
-        {
-            return false;
-        }                
-    }
-
-    private int DeleteAllLine(int Deleteline, int x, int y)
-    {
-        Deleteline += DeleteLine(x, y, 1, 0);
-        Deleteline += DeleteLine(x, y, 0, 1);
-
+        
         return Deleteline;
-
+                 
     }
 
+    private void CreateNewBall(int x, int y)
+    {
+        for (; GetMap(x, y - 1) > 0; y--) 
+        {
+            SetMap(x, y, map[x, y - 1]);
+        }
+
+        if (GetMap(x, y - 1) == 0)
+        {
+            AddRandomBoll(x, y);
+        }
+    }
+
+   
     private int DeleteLine(int x0, int y0, int sx, int sy)
     {
         int ball = map[x0, y0];
@@ -248,18 +271,27 @@ public class ThreeRowControler: Controller
         {
             count++;
         }
-
+        
         if (count < 3)
         {
             return 0;
         }
+
 
         for (int x = x0, y = y0; GetMap(x, y) == ball; x += sx, y += sy)
         {
             mark[x, y] = true;
         }
 
-        return count;
+
+        if (count < 3)
+        {
+            return 0;
+        }
+        else 
+        {
+            return 1;
+        }      
     }
 
     private int GetMap(int x, int y)
@@ -272,7 +304,102 @@ public class ThreeRowControler: Controller
         {
             return 0;
         }
-    } 
+    }
+
+
+    private bool SearchPosibleTurn()
+    {
+        var copyMap = map;
+        int DeathMap = 0;
+
+        for (int a = 0; a < Size; a++)
+        {
+            for (int b = 0; b < Size; b++)
+            {
+                if (SetCopyMap(a, b, a, b + 1, copyMap) + SetCopyMap(a, b, a + 1, b, copyMap) > 0)
+                {
+                    DeathMap++; 
+                }
+            }
+        }
+
+        if (DeathMap > 0) 
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    private int SetCopyMap(int a0, int b0, int a1, int b1, int[,] copyMap)
+    {
+        if (CGetMap(a1, b1, copyMap) != 0)
+        {
+            int swap0 = copyMap[a0, b0];
+            int swap1 = copyMap[a1, b1];
+            int ret = 0;
+
+            copyMap[a0, b0] = swap1;
+            copyMap[a1, b1] = swap0;
+
+            ret += CDeleteLine(a0, b0, 1, 0, copyMap);
+            ret += CDeleteLine(a0, b0, 0, 1, copyMap);
+
+            copyMap[a0, b0] = swap0;
+            copyMap[a1, b1] = swap1;
+
+            return ret;
+        }
+        else 
+        {
+            return 0;
+        }
+    }
+
+    private int CDeleteLine(int x0, int y0, int sx, int sy,  int[,] copyMap)
+    {
+        int ball = copyMap[x0, y0];
+        int count = 0;
+
+        if (ball == 0)
+        {
+            return 0;
+        }
+
+        for (int x = x0, y = y0; CGetMap(x, y, copyMap) == ball; x += sx, y += sy)
+        {
+            count++;
+        }
+
+        if (count < 3)
+        {
+            return 0;
+        }
+
+        if (count < 3)
+        {
+            return 0;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
+    private int CGetMap(int x, int y, int[,] copyMap)
+    {
+        if (x >= 0 && y >= 0 && x < Size && y < Size)
+        {
+            return copyMap[x, y];
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
 }
 
 
