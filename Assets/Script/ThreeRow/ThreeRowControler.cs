@@ -48,6 +48,10 @@ public class ThreeRowControler: Controller
         InitCellComponent();
         SetClickOnButtons();
         SetCurrentSprites();
+        while (SearchPosibleTurn())
+        {
+            AddRandomBolls();
+        }
     }
 
     private void InitCellComponent()
@@ -169,9 +173,10 @@ public class ThreeRowControler: Controller
 
             if(DeleteLines())
             {
-                if (SearchPosibleTurn()) 
+                while (DeleteLines()){}                  
+                while (SearchPosibleTurn() != true) 
                 {
-                    AddRandomBolls();
+                    AddRandomBolls(); //ך³םוצü דנט
                 }
             }
             else 
@@ -217,7 +222,7 @@ public class ThreeRowControler: Controller
         {
             for (int y = 0; y < Size; y++)
             {
-                if (DeleteLine(x, y, 1, 0) - DeleteLine(x, y, 0, 1) - DeleteLine(x, y, -1, 0) - DeleteLine(x, y, 0, -1) > 0)
+                if (DeleteLine(x, y, 1, 0) + DeleteLine(x, y, 0, 1) + DeleteLine(x, y, -1, 0) + DeleteLine(x, y, 0, -1) > 0)
                 {
                     Deleteline = true;
                 }
@@ -245,12 +250,12 @@ public class ThreeRowControler: Controller
 
     private void CreateNewBall(int x, int y)
     {
-        for (; GetMap(x, y - 1) > 0; y--) 
+        for (; GetMap(x, y - 1, map) > 0; y--) 
         {
             SetMap(x, y, map[x, y - 1]);
         }
 
-        if (GetMap(x, y - 1) == 0)
+        if (GetMap(x, y - 1, map) == 0)
         {
             AddRandomBoll(x, y);
         }
@@ -267,7 +272,7 @@ public class ThreeRowControler: Controller
             return 0;
         }        
 
-        for (int x = x0, y = y0; GetMap(x, y) == ball; x += sx, y += sy)  
+        for (int x = x0, y = y0; GetMap(x, y, map) == ball; x += sx, y += sy)  
         {
             count++;
         }
@@ -278,7 +283,7 @@ public class ThreeRowControler: Controller
         }
 
 
-        for (int x = x0, y = y0; GetMap(x, y) == ball; x += sx, y += sy)
+        for (int x = x0, y = y0; GetMap(x, y, map) == ball; x += sx, y += sy)
         {
             mark[x, y] = true;
         }
@@ -294,11 +299,11 @@ public class ThreeRowControler: Controller
         }      
     }
 
-    private int GetMap(int x, int y)
+    private int GetMap(int x, int y, int[,] Map)
     {
         if (x >= 0 && y >= 0 && x < Size && y < Size)
         { 
-            return map[x, y];
+            return Map[x, y];
         }
         else
         {
@@ -316,20 +321,19 @@ public class ThreeRowControler: Controller
         {
             for (int b = 0; b < Size; b++)
             {
-                if (SetCopyMap(a, b, a, b + 1, copyMap) + SetCopyMap(a, b, a + 1, b, copyMap) > 0)
-                {
-                    DeathMap++; 
-                }
+
+                DeathMap += SetCopyMap(a, b, a, b + 1, copyMap) + SetCopyMap(a, b, a + 1, b, copyMap);
+               
             }
         }
 
-        if (DeathMap > 0) 
+        if (DeathMap == 0) 
         {
-            return false;
+            return true;
         }
         else
         {
-            return true;
+            return false;
         }
     }
 
@@ -371,11 +375,6 @@ public class ThreeRowControler: Controller
         for (int x = x0, y = y0; CGetMap(x, y, copyMap) == ball; x += sx, y += sy)
         {
             count++;
-        }
-
-        if (count < 3)
-        {
-            return 0;
         }
 
         if (count < 3)
