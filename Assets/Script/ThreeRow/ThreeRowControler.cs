@@ -116,7 +116,7 @@ public class ThreeRowControler: Controller
         while (reroll) 
         {
             map[a, b] = UnityEngine.Random.Range(1, Bolls);
-            if (DeleteLine(a, b, -1, 0) != 0 || DeleteLine(a, b, 0, -1) != 0 || DeleteLine(a, b, 1, 0) != 0 || DeleteLine(a, b, 0, 1) != 0)
+            if (DeleteLine(a, b, -1, 0, map) != 0 || DeleteLine(a, b, 0, -1, map) != 0 || DeleteLine(a, b, 1, 0, map) != 0 || DeleteLine(a, b, 0, 1, map) != 0)
             {
                 reroll = true;
             }
@@ -176,6 +176,7 @@ public class ThreeRowControler: Controller
                 while (DeleteLines()){}                  
                 while (SearchPosibleTurn() != true) 
                 {
+
                     AddRandomBolls(); //ך³םוצü דנט
                 }
             }
@@ -222,7 +223,7 @@ public class ThreeRowControler: Controller
         {
             for (int y = 0; y < Size; y++)
             {
-                if (DeleteLine(x, y, 1, 0) + DeleteLine(x, y, 0, 1) + DeleteLine(x, y, -1, 0) + DeleteLine(x, y, 0, -1) > 0)
+                if (DeleteLine(x, y, 1, 0, map) + DeleteLine(x, y, 0, 1, map) + DeleteLine(x, y, -1, 0, map) + DeleteLine(x, y, 0, -1, map) > 0)
                 {
                     Deleteline = true;
                 }
@@ -262,7 +263,7 @@ public class ThreeRowControler: Controller
     }
 
    
-    private int DeleteLine(int x0, int y0, int sx, int sy)
+    private int DeleteLine(int x0, int y0, int sx, int sy, int[,] Map)
     {
         int ball = map[x0, y0];
         int count = 0;
@@ -339,7 +340,7 @@ public class ThreeRowControler: Controller
 
     private int SetCopyMap(int a0, int b0, int a1, int b1, int[,] copyMap)
     {
-        if (CGetMap(a1, b1, copyMap) != 0)
+        if (GetMap(a1, b1, copyMap) != 0)
         {
             int swap0 = copyMap[a0, b0];
             int swap1 = copyMap[a1, b1];
@@ -348,8 +349,8 @@ public class ThreeRowControler: Controller
             copyMap[a0, b0] = swap1;
             copyMap[a1, b1] = swap0;
 
-            ret += CDeleteLine(a0, b0, 1, 0, copyMap);
-            ret += CDeleteLine(a0, b0, 0, 1, copyMap);
+            ret += DeleteLine(a0, b0, 1, 0, copyMap);
+            ret += DeleteLine(a0, b0, 0, 1, copyMap);
 
             copyMap[a0, b0] = swap0;
             copyMap[a1, b1] = swap1;
@@ -360,44 +361,7 @@ public class ThreeRowControler: Controller
         {
             return 0;
         }
-    }
-
-    private int CDeleteLine(int x0, int y0, int sx, int sy,  int[,] copyMap)
-    {
-        int ball = copyMap[x0, y0];
-        int count = 0;
-
-        if (ball == 0)
-        {
-            return 0;
-        }
-
-        for (int x = x0, y = y0; CGetMap(x, y, copyMap) == ball; x += sx, y += sy)
-        {
-            count++;
-        }
-
-        if (count < 3)
-        {
-            return 0;
-        }
-        else
-        {
-            return 1;
-        }
-    }
-
-    private int CGetMap(int x, int y, int[,] copyMap)
-    {
-        if (x >= 0 && y >= 0 && x < Size && y < Size)
-        {
-            return copyMap[x, y];
-        }
-        else
-        {
-            return 0;
-        }
-    }
+    }      
 
 }
 
