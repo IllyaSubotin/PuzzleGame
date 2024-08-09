@@ -1,8 +1,10 @@
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -62,6 +64,7 @@ public class ThreeRowControler: Controller
         {
             var cell = GameObject.Instantiate(componentPrefab);
             cell.transform.SetParent(panel.transform, false);
+            cell.transform.localScale = Vector3.zero;
             cellComponent[a % Size, a / Size] = cell.GetComponent<CellComponent>();
             cellComponent[a % Size, a / Size].Index = a;
         }
@@ -82,8 +85,9 @@ public class ThreeRowControler: Controller
     private void SetCurrentSprites()
     {
         for (int a = 0; a < cellComponent.Length; a++)
-        { 
-            cellComponent[a % Size, a / Size].Image.sprite = sprites[map[a % Size, a / Size]]; 
+        {
+            cellComponent[a % Size, a / Size].Image.sprite = sprites[map[a % Size, a / Size]];
+            cellComponent[a % Size, a / Size].CreacteBallAnimation();
         }
     }
 
@@ -131,7 +135,7 @@ public class ThreeRowControler: Controller
     private void SetMap(int a, int b, int Image)
     {
         map[a, b] = Image;
-        cellComponent[a, b].Image.sprite = sprites[Image];
+        cellComponent[a, b].ChangeBallAnimation(sprites[Image]);
     }
 
 
@@ -174,7 +178,7 @@ public class ThreeRowControler: Controller
             if(DeleteLines())
             {
                 while (DeleteLines()){}                  
-                while (SearchPosibleTurn() != true) 
+                while (!SearchPosibleTurn()) 
                 {
                     AddRandomBolls(); //ך³םוצü דנט
                 }
@@ -216,7 +220,7 @@ public class ThreeRowControler: Controller
     }
 
     private bool DeleteLines() 
-    {
+    { 
         bool Deleteline = false;
         for(int x = 0; x < Size; x++) 
         {
@@ -242,10 +246,8 @@ public class ThreeRowControler: Controller
                 }
                 
             }
-        }
-        
+        } 
         return Deleteline;
-                 
     }
 
     private void CreateNewBall(int x, int y)
@@ -333,6 +335,7 @@ public class ThreeRowControler: Controller
         }
         else
         {
+            Debug.Log("you are DEAD");
             return false;
         }
     }
